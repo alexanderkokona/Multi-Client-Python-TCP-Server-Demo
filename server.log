@@ -1,0 +1,8 @@
+2026-01-30 14:38:52,426 [INFO] Server started on 127.0.0.1:65432
+2026-01-30 14:39:22,403 [INFO] Client connected: ('127.0.0.1', 38316)
+2026-01-30 14:39:22,403 [INFO] Request from ('127.0.0.1', 38316): HELLO
+2026-01-30 14:39:23,404 [INFO] Request from ('127.0.0.1', 38316): TIME
+2026-01-30 14:39:24,405 [INFO] Request from ('127.0.0.1', 38316): ECHO Automated client test
+2026-01-30 14:39:25,406 [INFO] Request from ('127.0.0.1', 38316): GET example.txt
+2026-01-30 14:39:26,407 [INFO] Request from ('127.0.0.1', 38316): QUIT
+2026-01-30 14:39:26,407 [INFO] Client disconnected: ('127.0.0.1', 38316)
