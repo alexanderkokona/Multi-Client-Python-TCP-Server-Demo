@@ -124,7 +124,7 @@ HOST = '127.0.0.1'
 PORT = 65432
 FILES_DIR = 'files'
 LOG_FILE = 'server.log'
-MAX_REQUEST_SIZE = 1024
+BUFFER_SIZE = 1024
 SOCKET_TIMEOUT = 60
 
 logging.basicConfig(
@@ -138,21 +138,31 @@ def handle_client(conn, addr):
     logging.info(f"Client connected: {addr}")
     conn.settimeout(SOCKET_TIMEOUT)
 
+    buffer = ""
+
     try:
         with conn:
             while True:
-                data = conn.recv(MAX_REQUEST_SIZE)
+                data = conn.recv(BUFFER_SIZE)
                 if not data:
                     break
 
-                request = data.decode(errors='ignore').strip()
-                logging.info(f"Request from {addr}: {request}")
+                buffer += data.decode(errors="ignore")
 
-                response, close = process_request(request)
-                conn.sendall(response.encode())
+                while "\n" in buffer:
+                    line, buffer = buffer.split("\n", 1)
+                    request = line.strip()
 
-                if close:
-                    break
+                    if not request:
+                        continue
+
+                    logging.info(f"Request from {addr}: {request}")
+
+                    response, close_conn = process_request(request)
+                    conn.sendall(response.encode())
+
+                    if close_conn:
+                        return
 
     except socket.timeout:
         logging.warning(f"Connection timeout: {addr}")
@@ -166,46 +176,40 @@ def handle_client(conn, addr):
 
 def process_request(request):
     parts = request.split(maxsplit=1)
-    command = parts[0].upper() if parts else ''
+    command = parts[0].upper() if parts else ""
 
-    if command == 'HELLO':
-        return 'Hello, client!
-', False
+    if command == "HELLO":
+        return "Hello, client!\n", False
 
-    elif command == 'TIME':
-        return datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '
-', False
+    elif command == "TIME":
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n", False
 
-    elif command == 'ECHO':
+    elif command == "ECHO":
         if len(parts) == 2:
-            return parts[1] + '
-', False
-        return 'Usage: ECHO <message>
-', False
+            return parts[1] + "\n", False
+        return "Usage: ECHO <message>\n", False
 
-    elif command == 'GET':
+    elif command == "GET":
         if len(parts) != 2:
-            return 'Usage: GET <filename>
-', False
+            return "Usage: GET <filename>\n", False
 
         filename = os.path.basename(parts[1])
         filepath = os.path.join(FILES_DIR, filename)
 
         if not os.path.isfile(filepath):
-            return 'File not found.
-', False
+            return "File not found.\n", False
 
-        with open(filepath, 'r') as file:
-            return file.read() + '
-', False
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                return f.read() + "\n", False
+        except Exception:
+            return "Error reading file.\n", False
 
-    elif command == 'QUIT':
-        return 'Goodbye!
-', True
+    elif command == "QUIT":
+        return "Goodbye!\n", True
 
     else:
-        return 'Unknown command.
-', False
+        return "Unknown command.\n", False
 
 
 def main():
@@ -215,16 +219,22 @@ def main():
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind((HOST, PORT))
         server.listen()
+
         logging.info(f"Server started on {HOST}:{PORT}")
 
         while True:
             conn, addr = server.accept()
-            thread = threading.Thread(target=handle_client, args=(conn, addr), daemon=True)
+            thread = threading.Thread(
+                target=handle_client,
+                args=(conn, addr),
+                daemon=True
+            )
             thread.start()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+
 ```
 
 ---python
@@ -315,32 +325,48 @@ main()
 
 ```python
 import socket
+import time
 
 HOST = '127.0.0.1'
 PORT = 65432
+BUFFER_SIZE = 4096
+
+COMMANDS = [
+    'HELLO',
+    'TIME',
+    'ECHO Automated client test',
+    'GET example.txt',
+    'QUIT'
+]
+
+
+def recv_line(sock):
+    buffer = ""
+    while "\n" not in buffer:
+        data = sock.recv(BUFFER_SIZE)
+        if not data:
+            break
+        buffer += data.decode(errors="ignore")
+    return buffer.strip()
 
 
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
         client.connect((HOST, PORT))
-        print('Connected to server. Type commands or QUIT to exit.')
 
-        while True:
-            message = input('> ')
-            if not message:
-                continue
+        for cmd in COMMANDS:
+            # Send command with newline (protocol requirement)
+            client.sendall((cmd + "\n").encode())
 
-            client.sendall(message.encode())
+            response = recv_line(client)
+            print(f"> {cmd}\n{response}\n")
 
-            response = client.recv(4096)
-            print(response.decode())
-
-            if message.upper() == 'QUIT':
-                break
+            time.sleep(1)
 
 
 if __name__ == '__main__':
     main()
+
 ````
 
 ---
