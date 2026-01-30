@@ -6,3 +6,10 @@
 2026-01-30 14:39:25,406 [INFO] Request from ('127.0.0.1', 38316): GET example.txt
 2026-01-30 14:39:26,407 [INFO] Request from ('127.0.0.1', 38316): QUIT
 2026-01-30 14:39:26,407 [INFO] Client disconnected: ('127.0.0.1', 38316)
+2026-01-30 14:50:34,422 [INFO] Client connected: ('127.0.0.1', 41900)
+2026-01-30 14:50:38,027 [INFO] Request from ('127.0.0.1', 41900): HELLO
+2026-01-30 14:50:49,207 [INFO] Request from ('127.0.0.1', 41900): TIME
+2026-01-30 14:50:57,786 [INFO] Request from ('127.0.0.1', 41900): ECHO manual echo test
+2026-01-30 14:51:04,033 [INFO] Request from ('127.0.0.1', 41900): GET example.txt
+2026-01-30 14:51:07,394 [INFO] Request from ('127.0.0.1', 41900): QUIT
+2026-01-30 14:51:07,394 [INFO] Client disconnected: ('127.0.0.1', 41900)
