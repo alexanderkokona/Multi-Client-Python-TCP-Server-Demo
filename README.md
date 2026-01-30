@@ -2,14 +2,15 @@
 
 ## Overview
 
-This project is a demonstration of a **multi-client TCP server application written in Python**. It is designed to showcase core concepts covered during the Sprint:
+This project is a demonstration of a **multi-client TCP server application written in Python**. It showcases core concepts covered during the Sprint, including:
 
 * Python fundamentals
 * TCP socket networking
 * Multithreading for concurrent clients
 * File I/O for dynamic server responses
+* Basic server hardening and logging
 
-The server accepts multiple client connections simultaneously and responds to structured client requests in real time.
+The server supports multiple simultaneous client connections and responds to structured, text-based client requests in real time.
 
 ---
 
@@ -18,10 +19,11 @@ The server accepts multiple client connections simultaneously and responds to st
 By completing this project, the following competencies are demonstrated:
 
 * Creating TCP servers and clients using Python sockets
-* Handling multiple concurrent connections with threading
-* Designing a simple text-based request/response protocol
+* Handling multiple concurrent connections using threading
+* Designing and implementing a simple request/response protocol
 * Performing safe, read-only file access on the server
-* Structuring a small but complete networked application
+* Implementing basic operational logging and timeouts
+* Structuring a complete, maintainable networked application
 
 ---
 
@@ -34,7 +36,8 @@ project-root/
 │   └── server.py
 │
 ├── client/
-│   └── client.py
+│   ├── client.py
+│   └── auto_client.py
 │
 ├── files/
 │   └── example.txt
@@ -46,15 +49,15 @@ project-root/
 
 ## Request Protocol
 
-Clients communicate with the server using simple text commands:
+Clients communicate with the server using simple **newline-delimited text commands**. Each command is sent as a single line terminated by a newline character (`\n`).
 
-| Command        | Description                                   |
-| -------------- | --------------------------------------------- |
-| HELLO          | Receive a greeting from the server            |
-| TIME           | Retrieve the current server time              |
-| ECHO <message> | Echo a message back to the client             |
-| GET <filename> | Retrieve contents of a predefined server file |
-| QUIT           | Disconnect from the server                    |
+| Command    | Description                                   |
+| ---------- | --------------------------------------------- |
+| HELLO      | Receive a greeting from the server            |
+| TIME       | Retrieve the current server time              |
+| ECHO <msg> | Echo a message back to the client             |
+| GET <file> | Retrieve contents of a predefined server file |
+| QUIT       | Disconnect from the server                    |
 
 All commands are case-insensitive.
 
@@ -63,20 +66,36 @@ All commands are case-insensitive.
 ## Server Behavior
 
 * Listens on a fixed TCP port
-* Accepts multiple clients concurrently using threads
-* Handles each client independently
+* Accepts multiple client connections concurrently
+* Spawns a dedicated thread per client
+* Uses a line-based protocol to safely process input
 * Performs **read-only file access** from the `/files` directory
-* Logs connections, requests, and errors to a rotating log file
-* Applies basic hardening (timeouts, input length limits, graceful disconnects)
+* Logs connections, requests, errors, and timeouts to `server.log`
+* Applies basic hardening measures:
+
+  * Socket timeouts
+  * Input buffering and size limits
+  * Safe filename handling
+  * Graceful client disconnects
 
 ---
 
 ## Client Behavior
 
-* Connects to the server using TCP
-* Sends commands entered by the user
+### Manual Client (`client.py`)
+
+* Connects to the server via TCP
+* Accepts user input from the terminal
+* Sends newline-delimited commands
 * Displays server responses in real time
-* Allows clean disconnection
+* Allows clean disconnection with `QUIT`
+
+### Automated Client (`auto_client.py`)
+
+* Connects to the server automatically
+* Sends a predefined sequence of commands
+* Demonstrates repeatable, scripted interaction
+* Useful for testing and demonstrations
 
 ---
 
@@ -84,25 +103,35 @@ All commands are case-insensitive.
 
 ### 1. Start the Server
 
-From the project root:
+From the project root directory:
 
 ```bash
 python3 server/server.py
 ```
 
+The server will start listening and create a `server.log` file.
+
+---
+
 ### 2. Start One or More Clients
 
-In separate terminals:
+In separate terminals, run one or more of the following:
 
 ```bash
 python3 client/client.py
 ```
 
-You can run multiple clients simultaneously to demonstrate concurrent handling.
+```bash
+python3 client/auto_client.py
+```
+
+Multiple clients may be run simultaneously to demonstrate concurrent handling.
 
 ---
 
-## Example File (`files/example.txt`)
+## Example Server File
+
+**files/example.txt**
 
 ```
 This is an example file stored on the server.
@@ -111,372 +140,83 @@ Clients may retrieve its contents using the GET command.
 
 ---
 
-## server/server.py
-
-```python
-import socket
-import threading
-import os
-import logging
-from datetime import datetime
-
-HOST = '127.0.0.1'
-PORT = 65432
-FILES_DIR = 'files'
-LOG_FILE = 'server.log'
-BUFFER_SIZE = 1024
-SOCKET_TIMEOUT = 60
-
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s'
-)
-
-
-def handle_client(conn, addr):
-    logging.info(f"Client connected: {addr}")
-    conn.settimeout(SOCKET_TIMEOUT)
-
-    buffer = ""
-
-    try:
-        with conn:
-            while True:
-                data = conn.recv(BUFFER_SIZE)
-                if not data:
-                    break
-
-                buffer += data.decode(errors="ignore")
-
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-                    request = line.strip()
-
-                    if not request:
-                        continue
-
-                    logging.info(f"Request from {addr}: {request}")
-
-                    response, close_conn = process_request(request)
-                    conn.sendall(response.encode())
-
-                    if close_conn:
-                        return
-
-    except socket.timeout:
-        logging.warning(f"Connection timeout: {addr}")
-
-    except Exception as e:
-        logging.error(f"Error with {addr}: {e}")
-
-    finally:
-        logging.info(f"Client disconnected: {addr}")
-
-
-def process_request(request):
-    parts = request.split(maxsplit=1)
-    command = parts[0].upper() if parts else ""
-
-    if command == "HELLO":
-        return "Hello, client!\n", False
-
-    elif command == "TIME":
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n", False
-
-    elif command == "ECHO":
-        if len(parts) == 2:
-            return parts[1] + "\n", False
-        return "Usage: ECHO <message>\n", False
-
-    elif command == "GET":
-        if len(parts) != 2:
-            return "Usage: GET <filename>\n", False
-
-        filename = os.path.basename(parts[1])
-        filepath = os.path.join(FILES_DIR, filename)
-
-        if not os.path.isfile(filepath):
-            return "File not found.\n", False
-
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                return f.read() + "\n", False
-        except Exception:
-            return "Error reading file.\n", False
-
-    elif command == "QUIT":
-        return "Goodbye!\n", True
-
-    else:
-        return "Unknown command.\n", False
-
-
-def main():
-    os.makedirs(FILES_DIR, exist_ok=True)
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind((HOST, PORT))
-        server.listen()
-
-        logging.info(f"Server started on {HOST}:{PORT}")
-
-        while True:
-            conn, addr = server.accept()
-            thread = threading.Thread(
-                target=handle_client,
-                args=(conn, addr),
-                daemon=True
-            )
-            thread.start()
-
-
-if __name__ == "__main__":
-    main()
-
-```
-
----python
-import socket
-import threading
-import os
-from datetime import datetime
-
-HOST = '127.0.0.1'
-PORT = 65432
-FILES_DIR = 'files'
-
-def handle_client(conn, addr):
-print(f"[+] Connected: {addr}")
-with conn:
-while True:
-data = conn.recv(1024)
-if not data:
-break
-
-```
-        request = data.decode().strip()
-        response = process_request(request)
-        conn.sendall(response.encode())
-
-print(f"[-] Disconnected: {addr}")
-```
-
-def process_request(request):
-parts = request.split(maxsplit=1)
-command = parts[0].upper()
-
-```
-if command == 'HELLO':
-    return 'Hello, client!\n'
-
-elif command == 'TIME':
-    return datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n'
-
-elif command == 'ECHO':
-    if len(parts) == 2:
-        return parts[1] + '\n'
-    return 'Usage: ECHO <message>\n'
-
-elif command == 'GET':
-    if len(parts) != 2:
-        return 'Usage: GET <filename>\n'
-
-    filename = os.path.basename(parts[1])
-    filepath = os.path.join(FILES_DIR, filename)
-
-    if not os.path.isfile(filepath):
-        return 'File not found.\n'
-
-    with open(filepath, 'r') as file:
-        return file.read() + '\n'
-
-elif command == 'QUIT':
-    return 'Goodbye!\n'
-
-else:
-    return 'Unknown command.\n'
-```
-
-def main():
-os.makedirs(FILES_DIR, exist_ok=True)
-
-```
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-    server.bind((HOST, PORT))
-    server.listen()
-    print(f"[*] Server listening on {HOST}:{PORT}")
-
-    while True:
-        conn, addr = server.accept()
-        thread = threading.Thread(target=handle_client, args=(conn, addr))
-        thread.start()
-```
-
-if **name** == '**main**':
-main()
-
-````
-
----
-
-## client/client.py
-
-```python
-import socket
-
-HOST = '127.0.0.1'
-PORT = 65432
-
-
-def main():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-        client.connect((HOST, PORT))
-        print('Connected to server. Type commands or QUIT to exit.')
-
-        while True:
-            message = input('> ')
-            if not message:
-                continue
-
-            client.sendall(message.encode())
-
-            response = client.recv(4096)
-            print(response.decode())
-
-            if message.upper() == 'QUIT':
-                break
-
-
-if __name__ == '__main__':
-    main()
-````
-
----
-
-## client/auto_client.py
-
-```python
-import socket
-import time
-
-HOST = '127.0.0.1'
-PORT = 65432
-BUFFER_SIZE = 4096
-
-COMMANDS = [
-    'HELLO',
-    'TIME',
-    'ECHO Automated client test',
-    'GET example.txt',
-    'QUIT'
-]
-
-
-def recv_line(sock):
-    buffer = ""
-    while "\n" not in buffer:
-        data = sock.recv(BUFFER_SIZE)
-        if not data:
-            break
-        buffer += data.decode(errors="ignore")
-    return buffer.strip()
-
-
-def main():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-        client.connect((HOST, PORT))
-
-        for cmd in COMMANDS:
-            # Send command with newline (protocol requirement)
-            client.sendall((cmd + "\n").encode())
-
-            response = recv_line(client)
-            print(f"> {cmd}\n{response}\n")
-
-            time.sleep(1)
-
-
-if __name__ == '__main__':
-    main()
-
-```
-
----python
-import socket
-
-HOST = '127.0.0.1'
-PORT = 65432
-
-def main():
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-client.connect((HOST, PORT))
-print('Connected to server. Type commands or QUIT to exit.')
-
-```
-    while True:
-        message = input('> ')
-        client.sendall(message.encode())
-
-        if message.upper() == 'QUIT':
-            break
-
-        response = client.recv(4096)
-        print(response.decode())
-```
-
-if **name** == '**main**':
-main()
-
-```
-
----
-
 ## Demonstration Expectations
 
 A successful demonstration shows:
 
-- Server startup and log file creation
-- Multiple manual clients connected simultaneously
-- Automated client executing scripted commands
-- Independent request handling without blocking
-- Correct responses to each command
-- Server-side logging of connections and requests
-- Graceful client disconnects
+* Server startup and log file creation
+* Multiple manual clients connected simultaneously
+* Automated client executing scripted commands
+* Independent request handling without blocking
+* Correct responses to each command
+* Server-side logging of connections and requests
+* Graceful client disconnects
 
 ---
 
-## Demonstration Video Script
+## Security and Design Considerations
 
-**1. Introduction (10–15 seconds)**  
-Briefly explain the purpose of the project and the concepts it demonstrates.
-
-**2. Server Startup (10 seconds)**  
-Start the server and show the console/log file initializing.
-
-**3. Manual Client Demo (30–45 seconds)**  
-Connect one client and issue `HELLO`, `TIME`, and `ECHO` commands.
-
-**4. Concurrent Clients (30 seconds)**  
-Start a second manual client and show both interacting simultaneously.
-
-**5. Automated Client (20 seconds)**  
-Run `auto_client.py` to demonstrate scripted, repeatable interaction.
-
-**6. File Retrieval (10 seconds)**  
-Show `GET example.txt` and confirm correct output.
-
-**7. Logging Proof (10 seconds)**  
-Open `server.log` and highlight connection and request entries.
-
-**8. Clean Shutdown (10 seconds)**  
-Clients disconnect cleanly; server continues running.
+* The server only allows read-only access to files in a predefined directory
+* Filenames are sanitized to prevent path traversal
+* Client inactivity is limited via socket timeouts
+* Logging provides basic visibility into server activity
 
 ---
 
 ## Final Notes
 
-This version includes logging, automation, and basic hardening while remaining intentionally simple. It reflects realistic client/server design principles and provides a strong foundation for security monitoring, protocol design, and future expansion.
+This project intentionally avoids unnecessary complexity while remaining realistic and technically sound. It reflects real-world client/server design patterns and provides a strong foundation for more advanced networking, security monitoring, or protocol-based applications.
 
-```
+---
+
+# Demonstration Video Script
+
+## 1. Introduction (10–15 seconds)
+
+"This project is a multi-client TCP server written in Python. It demonstrates socket networking, multithreading, file I/O, and basic server hardening. I’ll show the server handling multiple clients simultaneously and responding to different types of requests."
+
+## 2. Server Startup (10 seconds)
+
+* Start `server.py`
+* Briefly point out the listening address and the creation of `server.log`
+
+## 3. Manual Client Demonstration (30–45 seconds)
+
+* Start `client.py`
+* Issue the following commands:
+
+  * `HELLO`
+  * `TIME`
+  * `ECHO Hello from client one`
+* Explain that responses are returned in real time
+
+## 4. Concurrent Clients (30 seconds)
+
+* Start a second manual client in another terminal
+* Show both clients sending commands at the same time
+* Emphasize independent handling via threading
+
+## 5. Automated Client Demonstration (20 seconds)
+
+* Run `auto_client.py`
+* Explain that it sends a scripted sequence of commands automatically
+* Highlight its usefulness for testing and repeatability
+
+## 6. File Retrieval (10 seconds)
+
+* Demonstrate `GET example.txt`
+* Show the server returning file contents
+
+## 7. Logging Verification (10 seconds)
+
+* Open `server.log`
+* Point out connection, request, and disconnect entries
+
+## 8. Clean Disconnect (10 seconds)
+
+* Use `QUIT` to close clients cleanly
+* Note that the server continues running and accepting new connections
+
+---
+
+**End of demonstration.**
