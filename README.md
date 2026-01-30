@@ -325,6 +325,40 @@ main()
 
 ```python
 import socket
+
+HOST = '127.0.0.1'
+PORT = 65432
+
+
+def main():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+        client.connect((HOST, PORT))
+        print('Connected to server. Type commands or QUIT to exit.')
+
+        while True:
+            message = input('> ')
+            if not message:
+                continue
+
+            client.sendall(message.encode())
+
+            response = client.recv(4096)
+            print(response.decode())
+
+            if message.upper() == 'QUIT':
+                break
+
+
+if __name__ == '__main__':
+    main()
+````
+
+---
+
+## client/auto_client.py
+
+```python
+import socket
 import time
 
 HOST = '127.0.0.1'
@@ -367,42 +401,6 @@ def main():
 if __name__ == '__main__':
     main()
 
-````
-
----
-
-## client/auto_client.py
-
-```python
-import socket
-import time
-
-HOST = '127.0.0.1'
-PORT = 65432
-
-COMMANDS = [
-    'HELLO',
-    'TIME',
-    'ECHO Automated client test',
-    'GET example.txt',
-    'QUIT'
-]
-
-
-def main():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-        client.connect((HOST, PORT))
-
-        for cmd in COMMANDS:
-            client.sendall(cmd.encode())
-            response = client.recv(4096)
-            print(f"> {cmd}
-{response.decode()}")
-            time.sleep(1)
-
-
-if __name__ == '__main__':
-    main()
 ```
 
 ---python
