@@ -1,0 +1,2 @@
+This is an example file stored on the server.
+Clients may retrieve its contents using the GET command.
