@@ -13,3 +13,19 @@
 2026-01-30 14:51:04,033 [INFO] Request from ('127.0.0.1', 41900): GET example.txt
 2026-01-30 14:51:07,394 [INFO] Request from ('127.0.0.1', 41900): QUIT
 2026-01-30 14:51:07,394 [INFO] Client disconnected: ('127.0.0.1', 41900)
+2026-02-07 18:21:59,695 [INFO] Server started on 127.0.0.1:65432
+2026-02-07 22:20:08,615 [INFO] Server started on 127.0.0.1:65432
+2026-02-07 22:24:50,890 [INFO] Server started on 127.0.0.1:65432
+2026-02-07 22:25:04,183 [INFO] Client connected: ('127.0.0.1', 60362)
+2026-02-07 22:25:22,030 [INFO] Client connected: ('127.0.0.1', 59846)
+2026-02-07 22:26:04,241 [WARNING] Connection timeout: ('127.0.0.1', 60362)
+2026-02-07 22:26:04,241 [INFO] Client disconnected: ('127.0.0.1', 60362)
+2026-02-07 22:26:22,080 [WARNING] Connection timeout: ('127.0.0.1', 59846)
+2026-02-07 22:26:22,080 [INFO] Client disconnected: ('127.0.0.1', 59846)
+2026-02-07 22:26:49,579 [INFO] Client connected: ('127.0.0.1', 33150)
+2026-02-07 22:26:49,579 [INFO] Request from ('127.0.0.1', 33150): HELLO
+2026-02-07 22:26:50,579 [INFO] Request from ('127.0.0.1', 33150): TIME
+2026-02-07 22:26:51,580 [INFO] Request from ('127.0.0.1', 33150): ECHO Automated client test
+2026-02-07 22:26:52,581 [INFO] Request from ('127.0.0.1', 33150): GET example.txt
+2026-02-07 22:26:53,593 [INFO] Request from ('127.0.0.1', 33150): QUIT
+2026-02-07 22:26:53,593 [INFO] Client disconnected: ('127.0.0.1', 33150)
