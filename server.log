@@ -29,3 +29,22 @@
 2026-02-07 22:26:52,581 [INFO] Request from ('127.0.0.1', 33150): GET example.txt
 2026-02-07 22:26:53,593 [INFO] Request from ('127.0.0.1', 33150): QUIT
 2026-02-07 22:26:53,593 [INFO] Client disconnected: ('127.0.0.1', 33150)
+2026-02-07 22:32:35,391 [INFO] Server started on 127.0.0.1:65432
+2026-02-07 22:32:47,264 [INFO] Client connected: ('127.0.0.1', 60328)
+2026-02-07 22:32:49,824 [INFO] Request from ('127.0.0.1', 60328): HELLO
+2026-02-07 22:32:54,580 [INFO] Client connected: ('127.0.0.1', 57282)
+2026-02-07 22:32:57,072 [INFO] Request from ('127.0.0.1', 57282): HELLO
+2026-02-07 22:33:04,751 [INFO] Request from ('127.0.0.1', 57282): GET example.txt
+2026-02-07 22:33:15,950 [INFO] Client connected: ('127.0.0.1', 44852)
+2026-02-07 22:33:15,950 [INFO] Request from ('127.0.0.1', 44852): HELLO
+2026-02-07 22:33:16,951 [INFO] Request from ('127.0.0.1', 44852): TIME
+2026-02-07 22:33:17,951 [INFO] Request from ('127.0.0.1', 44852): ECHO Automated client test
+2026-02-07 22:33:18,952 [INFO] Request from ('127.0.0.1', 44852): GET example.txt
+2026-02-07 22:33:19,952 [INFO] Request from ('127.0.0.1', 44852): QUIT
+2026-02-07 22:33:19,953 [INFO] Client disconnected: ('127.0.0.1', 44852)
+2026-02-07 22:33:27,100 [INFO] Request from ('127.0.0.1', 57282): TIME
+2026-02-07 22:33:35,057 [INFO] Request from ('127.0.0.1', 60328): ECHO Hello There
+2026-02-07 22:33:37,576 [INFO] Request from ('127.0.0.1', 60328): QUIT
+2026-02-07 22:33:37,576 [INFO] Client disconnected: ('127.0.0.1', 60328)
+2026-02-07 22:33:41,733 [INFO] Request from ('127.0.0.1', 57282): QUIT
+2026-02-07 22:33:41,733 [INFO] Client disconnected: ('127.0.0.1', 57282)
