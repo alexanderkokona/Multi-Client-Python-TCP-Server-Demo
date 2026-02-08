@@ -48,3 +48,23 @@
 2026-02-07 22:33:37,576 [INFO] Client disconnected: ('127.0.0.1', 60328)
 2026-02-07 22:33:41,733 [INFO] Request from ('127.0.0.1', 57282): QUIT
 2026-02-07 22:33:41,733 [INFO] Client disconnected: ('127.0.0.1', 57282)
+2026-02-07 22:38:19,368 [INFO] Server started on 127.0.0.1:65432
+2026-02-07 22:38:30,641 [INFO] Client connected: ('127.0.0.1', 60574)
+2026-02-07 22:38:33,078 [INFO] Request from ('127.0.0.1', 60574): HELLO
+2026-02-07 22:38:37,420 [INFO] Client connected: ('127.0.0.1', 53108)
+2026-02-07 22:38:39,135 [INFO] Request from ('127.0.0.1', 53108): HELLO
+2026-02-07 22:38:45,455 [INFO] Client connected: ('127.0.0.1', 36374)
+2026-02-07 22:38:45,455 [INFO] Request from ('127.0.0.1', 36374): HELLO
+2026-02-07 22:38:46,456 [INFO] Request from ('127.0.0.1', 36374): TIME
+2026-02-07 22:38:47,456 [INFO] Request from ('127.0.0.1', 36374): ECHO Automated client test
+2026-02-07 22:38:48,457 [INFO] Request from ('127.0.0.1', 36374): GET example.txt
+2026-02-07 22:38:49,457 [INFO] Request from ('127.0.0.1', 36374): QUIT
+2026-02-07 22:38:49,458 [INFO] Client disconnected: ('127.0.0.1', 36374)
+2026-02-07 22:38:55,720 [INFO] Request from ('127.0.0.1', 60574): TIME
+2026-02-07 22:39:00,949 [INFO] Request from ('127.0.0.1', 60574): GET example.txt
+2026-02-07 22:39:06,792 [INFO] Request from ('127.0.0.1', 60574): ECHO Hello there
+2026-02-07 22:39:23,156 [INFO] Request from ('127.0.0.1', 53108): ECHO General Kenobi
+2026-02-07 22:39:26,027 [INFO] Request from ('127.0.0.1', 53108): QUIT
+2026-02-07 22:39:26,027 [INFO] Client disconnected: ('127.0.0.1', 53108)
+2026-02-07 22:39:30,251 [INFO] Request from ('127.0.0.1', 60574): QUIT
+2026-02-07 22:39:30,251 [INFO] Client disconnected: ('127.0.0.1', 60574)
